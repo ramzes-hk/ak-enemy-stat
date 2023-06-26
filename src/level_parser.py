@@ -12,7 +12,9 @@ def read_level(url):
             for action in wave.get("fragments"):
                 for item in action.get("actions"):
                     if item.get("actionType") == 0:
-                        enemies.update({f"{item.get('key')}": item.get("count")})
+                        enemies.update(
+                            {f"{item.get('key')}": item.get("count")}
+                            )
     except UnicodeDecodeError:
         print(url)
     return enemies
