@@ -17,7 +17,8 @@ for root, _, files in os.walk(path, topdown=False):
     total_magicResistance = 0
     total_enemy = 0
     dir_name = os.path.relpath(root, path)
-    print(f"\n{names.get(dir_name)}")
+    chapter_name = f"{names.get(dir_name, dir_name)}"
+    print(f"\n{chapter_name}")
     try:
         for file in files:
             file_path = f"{root}\{file}"
