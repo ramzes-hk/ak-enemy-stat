@@ -7,6 +7,9 @@ def avg_stats(path):
     with open("cn_enemies", "r", encoding="utf-8") as file:
         stats = json.load(file)
     
+    with open("event_names.json", "r", encoding="utf-8") as file:
+        names = json.load(file)
+    
     for root, _, files in os.walk(path, topdown=False):
         total_maxHp = 0
         total_atk = 0
@@ -14,7 +17,8 @@ def avg_stats(path):
         total_magicResistance = 0
         total_enemy = 0
         print("\n")
-        print(root)
+        dir_name = os.path.relpath(root, path)
+        print(names.get(dir_name))
         try:
             for file in files:
                 file_path = f"{root}\{file}"
@@ -28,10 +32,10 @@ def avg_stats(path):
                         total_atk += item.get("atk") * count
                         total_def += item.get("def") * count
                         total_magicResistance += item.get("magicResistance") * count
-            print(f"maxHp: {total_maxHp/total_enemy}")
-            print(f"atk: {total_atk/total_enemy}")
-            print(f"def: {total_def/total_enemy}")
-            print(f"res: {total_magicResistance/total_enemy}")    
+            print(f"maxHp: {total_maxHp/total_enemy:.1f}")
+            print(f"atk: {total_atk/total_enemy:.1f}")
+            print(f"def: {total_def/total_enemy:.1f}")
+            print(f"res: {total_magicResistance/total_enemy:.1f}")    
         except AttributeError:
             print(file)
             
