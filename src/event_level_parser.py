@@ -78,8 +78,9 @@ def get_enemy_stats(key, file) -> dict:
 def traverse_levels(url):
     for root, _, files in os.walk(url):
         path = f"activities/{os.path.relpath(root, url)}"
-        if not os.path.exists(path):
-            os.mkdir(path)
+        folder = os.path.join(os.path.dirname(__file__), "..", path)
+        if not os.path.exists(folder):
+            os.mkdir(folder)
         for file in files:
             file_read_path = f"{root}/{file}"
             file_write_path = os.path.join(os.path.dirname(__file__), "..", path, file) 
