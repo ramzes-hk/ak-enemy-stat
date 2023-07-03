@@ -1,5 +1,6 @@
 import json
 import requests
+import os
 
 def get_enemies(url): 
     response = requests.get(url)
@@ -8,7 +9,7 @@ def get_enemies(url):
     formatted_enemies = {}
     for enemy in enemies:
         formatted_enemies.update({
-            f"{enemy.get('Key')}": {
+            enemy.get('Key'): {
                 "Key": enemy
                     .get("Key"),
                 "name": enemy
@@ -51,7 +52,8 @@ en = get_enemies("https://raw.githubusercontent.com/Kengxxiao/ArknightsGameData/
 for key in en.keys():
     cn[key]["name"] = en[key]["name"]
 
-with open("cn_enemies", "w", encoding="utf-8") as file:
+file_path = os.path.join(os.path.dirname(__file__), "..", "cn_enemies.json")
+with open(file_path, "w", encoding="utf-8") as file:
     json.dump(cn, file, indent=4, ensure_ascii=False)
 
 

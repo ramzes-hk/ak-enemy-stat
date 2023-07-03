@@ -1,24 +1,79 @@
 import json 
 import os 
-from collections import Counter
+from exceptions import JSONException
+import collections.abc
+
+file_path = os.path.join(os.path.dirname(__file__), "..", "cn_enemies.json")
+with open(file_path, "r", encoding="utf-8") as f:
+    enemy_db = json.load(f)
+
+def read_level(file) -> dict:
+    enemy_counter = collections.Counter()
+    with open(file, "r", encoding="utf-8") as f:
+        buffer = json.load(f)
+    waves = buffer.get("waves")
+    enemy = {}
+    if not waves:
+        raise JSONException(message="No key:'waves'", file=file) 
+    for wave in waves:
+        fragments = wave.get("fragments")
+        if not fragments and not isinstance(fragments, collections.abc.Sequence):
+            raise JSONException(message="No key: 'fragments'", file=file)
+        for fragment in fragments:
+            actions = fragment.get("actions")
+            if not actions:
+                raise JSONException(message="No key: 'actions'", file=file) 
+            for action in actions:
+                action_type = action.get("actionType", 0)
+                if action_type != 0:
+                    continue
+                enemy_key = action.get("key")
+                enemy_count = action.get("count")
+                enemy_counter.update({enemy_key: enemy_count})
+
+                enemy_params = get_enemy_stats(enemy_key, file)
+                enemy_params.update({"count": enemy_counter.get(enemy_key)})
+                enemy.update({enemy_key: enemy_params})
+    return enemy
 
 
-def read_level(url):
-    try:
-        enemies = Counter()
-        with open(url, "r", encoding="utf-8") as file:
-            data = json.load(file).get("waves")
-        for wave in data:
-            for action in wave.get("fragments"):
-                for item in action.get("actions"):
-                    if item.get("actionType") == 0:
-                        enemies.update(
-                            {f"{item.get('key')}": item.get("count")}
-                            )
-    except UnicodeDecodeError:
-        print(url)
-    return enemies
-                    
+def get_enemy_stats(key, file) -> dict:
+    enemy = {}
+    enemy_default = enemy_db.get(key)
+    if enemy_default:
+        enemy.update({"maxHp": enemy_default.get("maxHp")})    
+        enemy.update({"atk": enemy_default.get("atk")}) 
+        enemy.update({"def": enemy_default.get("def")})          
+        enemy.update({"magicResistance": enemy_default.get("magicResistance")})
+    with open(file, "r", encoding="utf-8") as f:
+        stage = json.load(f)
+    enemy_refs = stage.get("enemyDbRefs")
+    if not enemy_refs:
+        return enemy
+    for enemy_ref in enemy_refs:
+        if enemy_ref.get("id") != key:
+            continue
+        overwritten = enemy_ref.get("overwrittenData")
+        if not overwritten:
+            break
+        attributes = overwritten.get("attributes")
+        if not attributes:
+            break
+        maxHp = attributes.get("maxHp")
+        atk = attributes.get("atk")
+        def_ = attributes.get("def")
+        magicResistance = attributes.get("magicResistance")
+        if maxHp.get("m_defined"):
+            enemy.update({"maxHp": maxHp.get("m_value")})
+        if atk.get("m_defined"):
+            enemy.update({"atk": atk.get("m_value")})
+        if def_.get("m_defined"):
+            enemy.update({"def": def_.get("m_value")})
+        if magicResistance.get("m_defined"):
+            enemy.update({"magicResistance": magicResistance.get("m_value")})
+    return enemy 
+
+
                     
 def traverse_levels(url):
     for root, _, files in os.walk(url):
@@ -27,11 +82,13 @@ def traverse_levels(url):
             os.mkdir(path)
         for file in files:
             file_read_path = f"{root}/{file}"
-            file_write_path = f"{path}/{file}"
-            level = {"level": read_level(file_read_path)}
+            file_write_path = os.path.join(os.path.dirname(__file__), "..", path, file) 
+            level = {}
+            level.update(read_level(file_read_path))
             with open(file_write_path, "w", encoding="utf-8") as f:
                 json.dump(level, f, ensure_ascii=False, indent=4)
             
-        
-with open("level_dir.txt", "r") as f:
+file_path = os.path.join(os.path.dirname(__file__), "..", "level_dir.txt")
+       
+with open(file_path, "r") as f:
     traverse_levels(fr"{f.read()}")
