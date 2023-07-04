@@ -76,18 +76,23 @@ def get_enemy_stats(key, file) -> dict:
 
                     
 def traverse_levels(url):
-    for root, _, files in os.walk(url):
-        path = f"activities/{os.path.relpath(root, url)}"
-        if not os.path.exists(path):
-            os.mkdir(path)
+    path = os.path.join(os.path.dirname(__file__), "..", "activities", "main")
+    if not os.path.exists(path):
+        os.mkdir(path)
+    for root, _, files in os.walk(url, topdown=False):
         for file in files:
+            chapter_number_stage = file.split("_")[2]
+            chapter_number = chapter_number_stage.split("-")[0]
+            chapter_dir = f"{path}/main_{chapter_number}"
+            if not os.path.exists(chapter_dir):
+                os.mkdir(chapter_dir)
             file_read_path = f"{root}/{file}"
-            file_write_path = os.path.join(os.path.dirname(__file__), "..", path, file) 
+            file_write_path = f"{chapter_dir}/{file}"
             level = {}
             level.update(read_level(file_read_path))
             with open(file_write_path, "w", encoding="utf-8") as f:
                 json.dump(level, f, ensure_ascii=False, indent=4)
-            
+           
 file_path = os.path.join(os.path.dirname(__file__), "..", "main_level_dir.txt")
        
 with open(file_path, "r") as f:
